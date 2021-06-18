@@ -4,7 +4,11 @@ from django.conf import settings
 
 def upload_avater_path(instance, filename):
     ext = filename.split('.')[-1]   # ext:拡張子
-    return '/'.join(['avaters', str(instance.userProfile.id)+str(instance.nickName)+str(".")+str(ext)])
+    return '/'.join(['avaters', str(instance.userPost.id)+str(instance.nickName)+str(".")+str(ext)])
+
+def upload_post_path(instance, filename):
+    ext = filename.split('.')[-1]   # ext:拡張子
+    return '/'.join(['posts', str(instance.userProfile.id)+str(instance.title)+str(".")+str(ext)])
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None):
@@ -52,4 +56,25 @@ class Profile(models.Model):
 
 class Post(models.Model):
     title = models.CharField(max_length=100)
-    userPost = models
+    userPost = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userPost',
+        on_delete=models.CASCADE
+    )
+
+    created_on = models.DateTimeField(auto_now_add=True)
+    img = models.ImageField(blank=True, null=True, upload_to=upload_post_path)
+    liked = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked', blank=True)
+
+    def __str__(self):
+        return self.title
+
+class Comment(models.Model):
+    text = models.CharField(max_length=100)
+    userComment = models.ForeignKey(
+        settings.AUTH_USER_MODEL, related_name='userComment',
+        on_delete=models.CASCADE
+    )
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.text
